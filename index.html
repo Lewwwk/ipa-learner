@@ -603,7 +603,19 @@ function revealWord() {
   setTimeout(() => speakWord(entry.word), 300);
 }
 
-function playWholeWord() { speakWord(shuffledWords[wordIndex].word); }
+function playWholeWord() {
+  // Play each IPA sound in sequence — more useful for learning than TTS
+  const entry = shuffledWords[wordIndex];
+  const sounds = entry.ipa.filter(([sym]) => sym !== 'ˈ' && sym !== 'ˌ');
+  let i = 0;
+  function playNext() {
+    if (i >= sounds.length) return;
+    speakSound(sounds[i][0]);
+    i++;
+    setTimeout(playNext, 450);
+  }
+  playNext();
+}
 function nextWord() { wordIndex = (wordIndex + 1) % shuffledWords.length; showWord(); }
 function prevWord() { wordIndex = (wordIndex - 1 + shuffledWords.length) % shuffledWords.length; showWord(); }
 
