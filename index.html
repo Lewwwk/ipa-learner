@@ -598,21 +598,40 @@ function showWord() {
 function revealWord() {
   if (wordRevealed) return;
   wordRevealed = true;
+  wholeWordSeq++; // cancel any in-progress IPA sequence
   const entry = shuffledWords[wordIndex];
   document.getElementById('reveal-area').innerHTML = `<div class="revealed-word">${entry.word}</div>`;
   setTimeout(() => speakWord(entry.word), 300);
 }
 
+let wholeWordSeq = 0; // sequence ID to cancel in-progress playback
 function playWholeWord() {
-  // Play each IPA sound in sequence — more useful for learning than TTS
+  // Stop any TTS and prior sequence
+  window.speechSynthesis.cancel();
+  const seq = ++wholeWordSeq;
   const entry = shuffledWords[wordIndex];
   const sounds = entry.ipa.filter(([sym]) => sym !== 'ˈ' && sym !== 'ˌ');
   let i = 0;
   function playNext() {
-    if (i >= sounds.length) return;
-    speakSound(sounds[i][0]);
+    if (seq !== wholeWordSeq || i >= sounds.length) return;
+    const sym = sounds[i][0];
     i++;
-    setTimeout(playNext, 450);
+    const info = SYM_MAP[sym];
+    if (info && info.audio) {
+      const url = `${CDN}/${info.audio}`;
+      if (!audioCache[sym]) audioCache[sym] = new Audio(url);
+      const audio = audioCache[sym];
+      audio.pause();
+      audio.currentTime = 0;
+      audio.onended = () => { if (seq === wholeWordSeq) setTimeout(playNext, 200); };
+      audio.onerror = () => { if (seq === wholeWordSeq) setTimeout(playNext, 300); };
+      audio.play().catch(() => { if (seq === wholeWordSeq) setTimeout(playNext, 300); });
+    } else if (DIPHTHONG_TTS[sym]) {
+      ttsFallback(sym);
+      setTimeout(playNext, 700);
+    } else {
+      playNext();
+    }
   }
   playNext();
 }
