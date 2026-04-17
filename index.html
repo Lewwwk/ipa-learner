@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IPA Learner</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: #0f0f1a;
+    color: #e8e8f0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  header {
+    padding: 20px;
+    text-align: center;
+    width: 100%;
+    max-width: 600px;
+  }
+
+  h1 { font-size: 1.4rem; font-weight: 600; letter-spacing: 0.05em; color: #b8b8ff; }
+
+  .mode-tabs {
+    display: flex; gap: 4px; margin-top: 16px;
+    background: #1a1a2e; border-radius: 12px; padding: 4px;
+  }
+
+  .mode-tab {
+    flex: 1; padding: 10px 12px; border: none; background: transparent;
+    color: #8888aa; font-size: 0.85rem; font-weight: 500;
+    border-radius: 10px; cursor: pointer; transition: all 0.2s;
+  }
+  .mode-tab.active { background: #2a2a4a; color: #e8e8f0; }
+
+  main {
+    flex: 1; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; width: 100%; max-width: 600px; padding: 20px;
+  }
+
+  /* Symbol Practice */
+  .card {
+    background: #1a1a2e; border-radius: 24px; padding: 48px 40px;
+    text-align: center; width: 100%; max-width: 380px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  }
+
+  .symbol-display {
+    font-size: 6rem; font-family: 'Doulos SIL', 'Noto Sans', 'DejaVu Sans', serif;
+    line-height: 1.2; color: #ffffff; margin-bottom: 8px;
+  }
+
+  .symbol-name {
+    font-size: 0.95rem; color: #7777aa; margin-bottom: 24px; min-height: 1.4em;
+  }
+
+  .play-btn {
+    width: 72px; height: 72px; border-radius: 50%;
+    border: 2px solid #4444aa; background: #2a2a5a; color: #aaaaff;
+    font-size: 1.8rem; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    transition: all 0.2s; margin-bottom: 24px;
+  }
+  .play-btn:hover, .play-btn:active { background: #3a3a7a; border-color: #6666cc; transform: scale(1.05); }
+  .play-btn.playing { animation: pulse 0.6s ease; }
+
+  @keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.15); background: #4a4a8a; }
+    100% { transform: scale(1); }
+  }
+
+  .example-word { font-size: 0.85rem; color: #6666aa; margin-top: 4px; }
+
+  .nav-row { display: flex; gap: 16px; margin-top: 32px; width: 100%; max-width: 420px; }
+
+  .nav-btn {
+    flex: 1; padding: 14px; border: 1px solid #2a2a4a; background: #1a1a2e;
+    color: #aaaacc; font-size: 1rem; border-radius: 14px; cursor: pointer; transition: all 0.15s;
+  }
+  .nav-btn:hover, .nav-btn:active { background: #2a2a4a; color: #e8e8f0; }
+
+  /* Word Practice */
+  .word-card {
+    background: #1a1a2e; border-radius: 24px; padding: 40px 24px;
+    text-align: center; width: 100%; max-width: 420px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  }
+
+  .ipa-word { display: flex; justify-content: center; gap: 4px; flex-wrap: wrap; margin-bottom: 32px; }
+
+  .ipa-unit {
+    display: flex; flex-direction: column; align-items: center;
+    cursor: pointer; padding: 8px 6px; border-radius: 12px; transition: background 0.15s;
+  }
+  .ipa-unit:hover { background: #2a2a4a; }
+  .ipa-unit:active { background: #3a3a6a; }
+  .ipa-unit .sound-hint { font-size: 0.7rem; color: #5555aa; margin-bottom: 4px; min-height: 1em; white-space: nowrap; }
+  .ipa-unit .ipa-char { font-size: 2.8rem; font-family: 'Doulos SIL', 'Noto Sans', 'DejaVu Sans', serif; color: #ccccff; line-height: 1.2; }
+  .ipa-unit .sound-icon { font-size: 0.65rem; color: #4444aa; margin-top: 4px; }
+
+  .word-prompt { font-size: 0.9rem; color: #7777aa; margin-bottom: 20px; }
+
+  .reveal-area { min-height: 80px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+
+  .reveal-btn {
+    padding: 14px 40px; border: 1px solid #4444aa; background: #2a2a5a;
+    color: #ccccff; font-size: 1rem; border-radius: 14px; cursor: pointer; transition: all 0.15s;
+  }
+  .reveal-btn:hover { background: #3a3a7a; }
+
+  .revealed-word { font-size: 2.4rem; font-weight: 700; color: #88ff88; letter-spacing: 0.02em; animation: fadeIn 0.3s ease; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  .counter { font-size: 0.8rem; color: #555577; margin-top: 24px; }
+
+  .filter-row { display: flex; gap: 4px; margin-bottom: 16px; flex-wrap: wrap; justify-content: center; }
+
+  .filter-btn {
+    padding: 6px 14px; border: 1px solid #2a2a4a; background: transparent;
+    color: #7777aa; font-size: 0.8rem; border-radius: 8px; cursor: pointer; transition: all 0.15s;
+  }
+  .filter-btn.active { background: #2a2a4a; color: #ccccff; border-color: #4444aa; }
+
+  .hidden { display: none !important; }
+
+  .play-word-btn {
+    padding: 10px 24px; border: 1px solid #4444aa; background: #2a2a5a;
+    color: #aaaaff; font-size: 0.85rem; border-radius: 10px; cursor: pointer;
+    margin-bottom: 20px; transition: all 0.15s;
+  }
+  .play-word-btn:hover { background: #3a3a7a; }
+
+  /* Verify Mode */
+  .verify-card {
+    background: #1a1a2e; border-radius: 16px; width: 100%; max-width: 560px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3); overflow: hidden;
+  }
+  .verify-header {
+    padding: 16px 20px; background: #1a1a30; border-bottom: 1px solid #2a2a4a;
+    font-size: 0.85rem; color: #8888bb;
+  }
+  .verify-summary { display: flex; gap: 16px; margin-top: 8px; }
+  .verify-stat { font-size: 0.8rem; }
+  .verify-stat.ok { color: #66cc66; }
+  .verify-stat.fail { color: #cc6666; }
+  .verify-stat.pending { color: #8888aa; }
+
+  .verify-list { max-height: 60vh; overflow-y: auto; }
+
+  .verify-row {
+    display: flex; align-items: center; gap: 12px; padding: 12px 20px;
+    border-bottom: 1px solid #1a1a30; transition: background 0.1s;
+  }
+  .verify-row:hover { background: #1e1e35; }
+  .verify-row.status-ok { border-left: 3px solid #66cc66; }
+  .verify-row.status-fail { border-left: 3px solid #cc6666; }
+
+  .vr-symbol {
+    font-size: 1.8rem; font-family: 'Doulos SIL', 'Noto Sans', 'DejaVu Sans', serif;
+    color: #ccccff; width: 48px; text-align: center; flex-shrink: 0;
+  }
+  .vr-info { flex: 1; min-width: 0; }
+  .vr-name { font-size: 0.8rem; color: #8888bb; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .vr-file { font-size: 0.65rem; color: #555577; margin-top: 2px; font-family: monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .vr-play {
+    width: 36px; height: 36px; border-radius: 50%; border: 1px solid #4444aa;
+    background: #2a2a5a; color: #aaaaff; font-size: 1rem; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .vr-play:hover { background: #3a3a7a; }
+
+  .vr-actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .vr-ok, .vr-fail {
+    width: 32px; height: 32px; border-radius: 8px; border: 1px solid #2a2a4a;
+    background: transparent; font-size: 1rem; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .vr-ok:hover { background: #1a3a1a; border-color: #66cc66; }
+  .vr-fail:hover { background: #3a1a1a; border-color: #cc6666; }
+  .vr-ok.active { background: #1a3a1a; border-color: #66cc66; }
+  .vr-fail.active { background: #3a1a1a; border-color: #cc6666; }
+
+  @media (max-width: 420px) {
+    .symbol-display { font-size: 4.5rem; }
+    .ipa-unit .ipa-char { font-size: 2.2rem; }
+    .card { padding: 32px 24px; }
+    .vr-name { max-width: 120px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>IPA Learner</h1>
+  <div class="mode-tabs">
+    <button class="mode-tab active" onclick="switchMode('symbols')">Symbols</button>
+    <button class="mode-tab" onclick="switchMode('words')">Words</button>
+    <button class="mode-tab" onclick="switchMode('verify')">Verify</button>
+  </div>
+</header>
+
+<main>
+  <!-- SYMBOL PRACTICE MODE -->
+  <div id="symbol-mode">
+    <div class="filter-row">
+      <button class="filter-btn active" data-filter="all" onclick="setFilter('all')">All</button>
+      <button class="filter-btn" data-filter="vowels" onclick="setFilter('vowels')">Vowels</button>
+      <button class="filter-btn" data-filter="consonants" onclick="setFilter('consonants')">Consonants</button>
+    </div>
+    <div class="card">
+      <div class="symbol-display" id="sym-display"></div>
+      <div class="symbol-name" id="sym-name"></div>
+      <button class="play-btn" id="sym-play" onclick="playCurrentSymbol()">&#9654;</button>
+      <div class="example-word" id="sym-example"></div>
+    </div>
+    <div class="nav-row">
+      <button class="nav-btn" onclick="prevSymbol()">&#8592; Previous</button>
+      <button class="nav-btn" onclick="nextSymbol()">Next &#8594;</button>
+    </div>
+    <div class="counter" id="sym-counter"></div>
+  </div>
+
+  <!-- WORD PRACTICE MODE -->
+  <div id="word-mode" class="hidden">
+    <div class="word-card">
+      <div class="word-prompt">Tap each symbol to hear it. What word is this?</div>
+      <div class="ipa-word" id="ipa-word-display"></div>
+      <button class="play-word-btn" onclick="playWholeWord()">&#9654; Play whole word</button>
+      <div class="reveal-area" id="reveal-area">
+        <button class="reveal-btn" onclick="revealWord()">Reveal Word</button>
+      </div>
+    </div>
+    <div class="nav-row">
+      <button class="nav-btn" onclick="prevWord()">&#8592; Previous</button>
+      <button class="nav-btn" onclick="nextWord()">Next &#8594;</button>
+    </div>
+    <div class="counter" id="word-counter"></div>
+  </div>
+
+  <!-- VERIFY MODE -->
+  <div id="verify-mode" class="hidden">
+    <div class="verify-card">
+      <div class="verify-header">
+        Verify each symbol plays the correct sound. Listen, then mark correct or wrong.
+        <div class="verify-summary" id="verify-summary"></div>
+      </div>
+      <div class="verify-list" id="verify-list"></div>
+    </div>
+  </div>
+</main>
+
+<script>
+// ========== AUDIO SOURCE ==========
+// Clean, single-shot MP3 recordings from ipachart.app.
+// Each file contains exactly one instance of the IPA sound.
+// Source: extracted from ipachart.app JS bundle, URLs verified via HTTP.
+const CDN = 'https://assets.ipachart.app/ipa/audio';
+
+// ========== MASTER SYMBOL TABLE ==========
+// Single source of truth: symbol, IPA name, category, audio path, example word, hint.
+// The audio filename matches ipachart.app's ipaName field exactly.
+const SYMBOLS = [
+  // --- Vowels ---
+  { sym: 'i',  name: 'close front unrounded vowel',          cat: 'vowels', audio: 'vowels/Close_front_unrounded_vowel.mp3',              ex: 'fl**ee**ce',   hint: 'ee' },
+  { sym: 'ɪ',  name: 'near-close near-front unrounded vowel', cat: 'vowels', audio: 'vowels/Near-close_near-front_unrounded_vowel.mp3',    ex: 'k**i**t',      hint: 'ih' },
+  { sym: 'e',  name: 'close-mid front unrounded vowel',       cat: 'vowels', audio: 'vowels/Close-mid_front_unrounded_vowel.mp3',          ex: 'b**ay** (pure)', hint: 'ay' },
+  { sym: 'ɛ',  name: 'open-mid front unrounded vowel',        cat: 'vowels', audio: 'vowels/Open-mid_front_unrounded_vowel.mp3',           ex: 'dr**e**ss',    hint: 'eh' },
+  { sym: 'æ',  name: 'near-open front unrounded vowel',       cat: 'vowels', audio: 'vowels/Near-open_front_unrounded_vowel.mp3',          ex: 'tr**a**p',     hint: 'a' },
+  { sym: 'ɑ',  name: 'open back unrounded vowel',             cat: 'vowels', audio: 'vowels/Open_back_unrounded_vowel.mp3',                ex: 'f**a**ther',   hint: 'ah' },
+  { sym: 'ɒ',  name: 'open back rounded vowel',               cat: 'vowels', audio: 'vowels/Open_back_rounded_vowel.mp3',                  ex: 'l**o**t (British)', hint: 'oh' },
+  { sym: 'ɔ',  name: 'open-mid back rounded vowel',           cat: 'vowels', audio: 'vowels/Open-mid_back_rounded_vowel.mp3',              ex: 'th**ough**t',  hint: 'aw' },
+  { sym: 'o',  name: 'close-mid back rounded vowel',          cat: 'vowels', audio: 'vowels/Close-mid_back_rounded_vowel.mp3',             ex: 'g**o** (pure)', hint: 'oh' },
+  { sym: 'ʊ',  name: 'near-close near-back rounded vowel',    cat: 'vowels', audio: 'vowels/Near-close_near-back_rounded_vowel.mp3',       ex: 'f**oo**t',     hint: 'oo' },
+  { sym: 'u',  name: 'close back rounded vowel',              cat: 'vowels', audio: 'vowels/Close_back_rounded_vowel.mp3',                 ex: 'g**oo**se',    hint: 'oo' },
+  { sym: 'ʌ',  name: 'open-mid back unrounded vowel',         cat: 'vowels', audio: 'vowels/Open-mid_back_unrounded_vowel.mp3',            ex: 'str**u**t',    hint: 'uh' },
+  { sym: 'ə',  name: 'schwa (mid central vowel)',             cat: 'vowels', audio: 'vowels/Mid-central_vowel.mp3',                        ex: '**a**bout',    hint: 'uh' },
+  { sym: 'ɜ',  name: 'open-mid central unrounded vowel',      cat: 'vowels', audio: 'vowels/Open-mid_central_unrounded_vowel.mp3',         ex: 'n**ur**se',    hint: 'er' },
+
+  // --- Diphthongs (no single IPA recording; these are English-specific combinations) ---
+  { sym: 'aɪ', name: 'diphthong (PRICE)',   cat: 'vowels', audio: null, ex: 'pr**i**ce', hint: 'eye' },
+  { sym: 'aʊ', name: 'diphthong (MOUTH)',   cat: 'vowels', audio: null, ex: 'm**ou**th', hint: 'ow' },
+  { sym: 'ɔɪ', name: 'diphthong (CHOICE)',  cat: 'vowels', audio: null, ex: 'ch**oi**ce', hint: 'oy' },
+  { sym: 'eɪ', name: 'diphthong (FACE)',    cat: 'vowels', audio: null, ex: 'f**a**ce',  hint: 'ay' },
+  { sym: 'oʊ', name: 'diphthong (GOAT)',    cat: 'vowels', audio: null, ex: 'g**oa**t',  hint: 'oh' },
+
+  // --- Plosives ---
+  { sym: 'p',  name: 'voiceless bilabial plosive',    cat: 'consonants', audio: 'consonants/Voiceless_bilabial_plosive.mp3',   ex: '**p**at',  hint: 'p' },
+  { sym: 'b',  name: 'voiced bilabial plosive',       cat: 'consonants', audio: 'consonants/Voiced_bilabial_plosive.mp3',      ex: '**b**at',  hint: 'b' },
+  { sym: 't',  name: 'voiceless alveolar plosive',    cat: 'consonants', audio: 'consonants/Voiceless_alveolar_plosive.mp3',   ex: '**t**ap',  hint: 't' },
+  { sym: 'd',  name: 'voiced alveolar plosive',       cat: 'consonants', audio: 'consonants/Voiced_alveolar_plosive.mp3',      ex: '**d**og',  hint: 'd' },
+  { sym: 'k',  name: 'voiceless velar plosive',       cat: 'consonants', audio: 'consonants/Voiceless_velar_plosive.mp3',      ex: '**c**at',  hint: 'k' },
+  { sym: 'ɡ',  name: 'voiced velar plosive',          cat: 'consonants', audio: 'consonants/Voiced_velar_plosive.mp3',         ex: '**g**oat', hint: 'g' },
+
+  // --- Fricatives ---
+  { sym: 'f',  name: 'voiceless labiodental fricative',   cat: 'consonants', audio: 'consonants/Voiceless_labiodental_fricative.mp3',   ex: '**f**an',     hint: 'f' },
+  { sym: 'v',  name: 'voiced labiodental fricative',      cat: 'consonants', audio: 'consonants/Voiced_labiodental_fricative.mp3',      ex: '**v**an',     hint: 'v' },
+  { sym: 'θ',  name: 'voiceless dental fricative',        cat: 'consonants', audio: 'consonants/Voiceless_dental_fricative.mp3',        ex: '**th**ink',   hint: 'th (thin)' },
+  { sym: 'ð',  name: 'voiced dental fricative',           cat: 'consonants', audio: 'consonants/Voiced_dental_fricative.mp3',           ex: '**th**is',    hint: 'th (this)' },
+  { sym: 's',  name: 'voiceless alveolar fricative',      cat: 'consonants', audio: 'consonants/Voiceless_alveolar_fricative.mp3',      ex: '**s**it',     hint: 's' },
+  { sym: 'z',  name: 'voiced alveolar fricative',         cat: 'consonants', audio: 'consonants/Voiced_alveolar_fricative.mp3',         ex: '**z**oo',     hint: 'z' },
+  { sym: 'ʃ',  name: 'voiceless postalveolar fricative',  cat: 'consonants', audio: 'consonants/Voiceless_postalveolar_fricative.mp3',  ex: '**sh**ip',    hint: 'sh' },
+  { sym: 'ʒ',  name: 'voiced postalveolar fricative',     cat: 'consonants', audio: 'consonants/Voiced_postalveolar_fricative.mp3',     ex: 'vi**s**ion',  hint: 'zh' },
+  { sym: 'h',  name: 'voiceless glottal fricative',       cat: 'consonants', audio: 'consonants/Voiceless_glottal_fricative.mp3',       ex: '**h**at',     hint: 'h' },
+
+  // --- Affricates ---
+  { sym: 'tʃ', name: 'voiceless postalveolar affricate',  cat: 'consonants', audio: 'affricates/Voiceless_palato-alveolar_affricate.mp3', ex: '**ch**ip', hint: 'ch' },
+  { sym: 'dʒ', name: 'voiced postalveolar affricate',     cat: 'consonants', audio: 'affricates/Voiced_postalveolar_affricate.mp3',       ex: '**j**oy',  hint: 'j' },
+
+  // --- Nasals ---
+  { sym: 'm',  name: 'bilabial nasal',   cat: 'consonants', audio: 'consonants/Bilabial_nasal.mp3',  ex: '**m**an',   hint: 'm' },
+  { sym: 'n',  name: 'alveolar nasal',   cat: 'consonants', audio: 'consonants/Alveolar_nasal.mp3',  ex: '**n**ot',   hint: 'n' },
+  { sym: 'ŋ',  name: 'velar nasal',      cat: 'consonants', audio: 'consonants/Velar_nasal.mp3',     ex: 'si**ng**',  hint: 'ng' },
+
+  // --- Approximants ---
+  { sym: 'l',  name: 'alveolar lateral approximant', cat: 'consonants', audio: 'consonants/Alveolar_lateral_approximant.mp3', ex: '**l**et', hint: 'l' },
+  { sym: 'ɹ',  name: 'alveolar approximant',         cat: 'consonants', audio: 'consonants/Alveolar_approximant.mp3',         ex: '**r**ed', hint: 'r' },
+  { sym: 'w',  name: 'voiced labial-velar approximant', cat: 'consonants', audio: 'other-symbols/Voiced_labio-velar_approximant.mp3', ex: '**w**et', hint: 'w' },
+  { sym: 'j',  name: 'palatal approximant',          cat: 'consonants', audio: 'consonants/Palatal_approximant.mp3',          ex: '**y**es', hint: 'y' },
+
+  // --- Other ---
+  { sym: 'ʔ',  name: 'glottal stop',    cat: 'consonants', audio: 'consonants/Glottal_stop.mp3',    ex: 'uh-**oh**', hint: '(stop)' },
+];
+
+// Build lookup: symbol -> SYMBOLS entry
+const SYM_MAP = {};
+SYMBOLS.forEach(s => { SYM_MAP[s.sym] = s; });
+
+// ========== WORD DATA ==========
+// General American English transcriptions.
+const WORDS = [
+  { word: 'cat',    ipa: [['k','k'], ['æ','a'], ['t','t']] },
+  { word: 'dog',    ipa: [['d','d'], ['ɑ','ah'], ['ɡ','g']] },
+  { word: 'fish',   ipa: [['f','f'], ['ɪ','ih'], ['ʃ','sh']] },
+  { word: 'ship',   ipa: [['ʃ','sh'], ['ɪ','ih'], ['p','p']] },
+  { word: 'think',  ipa: [['θ','th'], ['ɪ','ih'], ['ŋ','ng'], ['k','k']] },
+  { word: 'this',   ipa: [['ð','th'], ['ɪ','ih'], ['z','z']] },
+  { word: 'house',  ipa: [['h','h'], ['aʊ','ow'], ['s','s']] },
+  { word: 'moon',   ipa: [['m','m'], ['u','oo'], ['n','n']] },
+  { word: 'sun',    ipa: [['s','s'], ['ʌ','uh'], ['n','n']] },
+  { word: 'tree',   ipa: [['t','t'], ['ɹ','r'], ['i','ee']] },
+  { word: 'bird',   ipa: [['b','b'], ['ɜ','er'], ['ɹ','r'], ['d','d']] },
+  { word: 'sing',   ipa: [['s','s'], ['ɪ','ih'], ['ŋ','ng']] },
+  { word: 'shop',   ipa: [['ʃ','sh'], ['ɑ','ah'], ['p','p']] },
+  { word: 'jump',   ipa: [['dʒ','j'], ['ʌ','uh'], ['m','m'], ['p','p']] },
+  { word: 'chair',  ipa: [['tʃ','ch'], ['ɛ','eh'], ['ɹ','r']] },
+  { word: 'king',   ipa: [['k','k'], ['ɪ','ih'], ['ŋ','ng']] },
+  { word: 'love',   ipa: [['l','l'], ['ʌ','uh'], ['v','v']] },
+  { word: 'name',   ipa: [['n','n'], ['eɪ','ay'], ['m','m']] },
+  { word: 'face',   ipa: [['f','f'], ['eɪ','ay'], ['s','s']] },
+  { word: 'goat',   ipa: [['ɡ','g'], ['oʊ','oh'], ['t','t']] },
+  { word: 'mouth',  ipa: [['m','m'], ['aʊ','ow'], ['θ','th']] },
+  { word: 'boy',    ipa: [['b','b'], ['ɔɪ','oy']] },
+  { word: 'night',  ipa: [['n','n'], ['aɪ','eye'], ['t','t']] },
+  { word: 'time',   ipa: [['t','t'], ['aɪ','eye'], ['m','m']] },
+  { word: 'big',    ipa: [['b','b'], ['ɪ','ih'], ['ɡ','g']] },
+  { word: 'red',    ipa: [['ɹ','r'], ['ɛ','eh'], ['d','d']] },
+  { word: 'green',  ipa: [['ɡ','g'], ['ɹ','r'], ['i','ee'], ['n','n']] },
+  { word: 'blue',   ipa: [['b','b'], ['l','l'], ['u','oo']] },
+  { word: 'food',   ipa: [['f','f'], ['u','oo'], ['d','d']] },
+  { word: 'book',   ipa: [['b','b'], ['ʊ','oo'], ['k','k']] },
+  { word: 'water',  ipa: [['w','w'], ['ɔ','aw'], ['t','t'], ['ə','uh'], ['ɹ','r']] },
+  { word: 'father', ipa: [['f','f'], ['ɑ','ah'], ['ð','th'], ['ə','uh'], ['ɹ','r']] },
+  { word: 'mother', ipa: [['m','m'], ['ʌ','uh'], ['ð','th'], ['ə','uh'], ['ɹ','r']] },
+  { word: 'about',  ipa: [['ə','uh'], ['b','b'], ['aʊ','ow'], ['t','t']] },
+  { word: 'yes',    ipa: [['j','y'], ['ɛ','eh'], ['s','s']] },
+  { word: 'zoo',    ipa: [['z','z'], ['u','oo']] },
+  { word: 'vision', ipa: [['v','v'], ['ɪ','ih'], ['ʒ','zh'], ['ə','uh'], ['n','n']] },
+  { word: 'shoe',   ipa: [['ʃ','sh'], ['u','oo']] },
+  { word: 'cheese', ipa: [['tʃ','ch'], ['i','ee'], ['z','z']] },
+  { word: 'joy',    ipa: [['dʒ','j'], ['ɔɪ','oy']] },
+  { word: 'hat',    ipa: [['h','h'], ['æ','a'], ['t','t']] },
+  { word: 'wet',    ipa: [['w','w'], ['ɛ','eh'], ['t','t']] },
+  { word: 'let',    ipa: [['l','l'], ['ɛ','eh'], ['t','t']] },
+  { word: 'run',    ipa: [['ɹ','r'], ['ʌ','uh'], ['n','n']] },
+  { word: 'stop',   ipa: [['s','s'], ['t','t'], ['ɑ','ah'], ['p','p']] },
+  { word: 'play',   ipa: [['p','p'], ['l','l'], ['eɪ','ay']] },
+  { word: 'boat',   ipa: [['b','b'], ['oʊ','oh'], ['t','t']] },
+  { word: 'cake',   ipa: [['k','k'], ['eɪ','ay'], ['k','k']] },
+  { word: 'five',   ipa: [['f','f'], ['aɪ','eye'], ['v','v']] },
+  { word: 'noise',  ipa: [['n','n'], ['ɔɪ','oy'], ['z','z']] },
+];
+
+// ========== AUDIO ENGINE ==========
+const audioCache = {};
+
+// For diphthongs (no single IPA recording exists), use SpeechSynthesis
+// with words that ARE the diphthong sound.
+const DIPHTHONG_TTS = {
+  'aɪ': 'eye', 'aʊ': 'ow', 'ɔɪ': 'oy', 'eɪ': 'ay', 'oʊ': 'oh',
+};
+
+function speakSound(ipaSymbol) {
+  const entry = SYM_MAP[ipaSymbol];
+
+  // If we have an audio file, play it
+  if (entry && entry.audio) {
+    const url = `${CDN}/${entry.audio}`;
+    if (!audioCache[ipaSymbol]) {
+      audioCache[ipaSymbol] = new Audio(url);
+    }
+    const audio = audioCache[ipaSymbol];
+    audio.pause();
+    audio.currentTime = 0;
+    audio.play().catch(() => ttsFallback(ipaSymbol));
+    return;
+  }
+
+  // Diphthongs: use TTS with the diphthong word
+  ttsFallback(ipaSymbol);
+}
+
+// SpeechSynthesis — only used for diphthongs and whole-word playback
+let preferredVoice = null;
+function loadVoice() {
+  const voices = window.speechSynthesis.getVoices();
+  if (!voices.length) return;
+  preferredVoice = voices.find(v => v.lang.startsWith('en') && v.name.includes('Samantha'))
+    || voices.find(v => v.lang === 'en-US')
+    || voices.find(v => v.lang.startsWith('en-US'))
+    || voices.find(v => v.lang.startsWith('en'));
+}
+window.speechSynthesis.onvoiceschanged = loadVoice;
+loadVoice();
+
+function ttsFallback(ipaSymbol) {
+  const text = DIPHTHONG_TTS[ipaSymbol];
+  if (!text) return;
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.rate = 0.8; u.volume = 1;
+  if (preferredVoice) u.voice = preferredVoice;
+  window.speechSynthesis.speak(u);
+}
+
+function speakWord(word) {
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(word);
+  u.rate = 0.85; u.volume = 1;
+  if (preferredVoice) u.voice = preferredVoice;
+  window.speechSynthesis.speak(u);
+}
+
+// ========== HELPERS ==========
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// ========== SYMBOL MODE ==========
+let currentFilter = 'all';
+let filteredSymbols = SYMBOLS.filter(s => s.audio); // exclude diphthongs initially? No, include all.
+let symbolIndex = 0;
+
+function setFilter(filter) {
+  currentFilter = filter;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b.dataset.filter === filter));
+  filteredSymbols = filter === 'all' ? [...SYMBOLS] : SYMBOLS.filter(s => s.cat === filter);
+  filteredSymbols = shuffle(filteredSymbols);
+  symbolIndex = 0;
+  showSymbol();
+}
+
+function showSymbol() {
+  const s = filteredSymbols[symbolIndex];
+  document.getElementById('sym-display').textContent = s.sym;
+  document.getElementById('sym-name').textContent = s.name;
+  document.getElementById('sym-example').innerHTML = `e.g. ${s.ex}`;
+  document.getElementById('sym-counter').textContent = `${symbolIndex + 1} / ${filteredSymbols.length}`;
+}
+
+function playCurrentSymbol() {
+  const btn = document.getElementById('sym-play');
+  btn.classList.remove('playing');
+  void btn.offsetWidth;
+  btn.classList.add('playing');
+  speakSound(filteredSymbols[symbolIndex].sym);
+}
+
+function nextSymbol() { symbolIndex = (symbolIndex + 1) % filteredSymbols.length; showSymbol(); }
+function prevSymbol() { symbolIndex = (symbolIndex - 1 + filteredSymbols.length) % filteredSymbols.length; showSymbol(); }
+
+// ========== WORD MODE ==========
+let shuffledWords = shuffle(WORDS);
+let wordIndex = 0;
+let wordRevealed = false;
+
+function showWord() {
+  wordRevealed = false;
+  const entry = shuffledWords[wordIndex];
+  const container = document.getElementById('ipa-word-display');
+  container.innerHTML = '';
+  entry.ipa.forEach(([sym, hint]) => {
+    const unit = document.createElement('div');
+    unit.className = 'ipa-unit';
+    unit.innerHTML = `<div class="sound-hint">${hint}</div><div class="ipa-char">${sym}</div><div class="sound-icon">&#128264;</div>`;
+    unit.addEventListener('click', () => speakSound(sym));
+    container.appendChild(unit);
+  });
+  document.getElementById('reveal-area').innerHTML = '<button class="reveal-btn" onclick="revealWord()">Reveal Word</button>';
+  document.getElementById('word-counter').textContent = `${wordIndex + 1} / ${shuffledWords.length}`;
+}
+
+function revealWord() {
+  if (wordRevealed) return;
+  wordRevealed = true;
+  const entry = shuffledWords[wordIndex];
+  document.getElementById('reveal-area').innerHTML = `<div class="revealed-word">${entry.word}</div>`;
+  setTimeout(() => speakWord(entry.word), 300);
+}
+
+function playWholeWord() { speakWord(shuffledWords[wordIndex].word); }
+function nextWord() { wordIndex = (wordIndex + 1) % shuffledWords.length; showWord(); }
+function prevWord() { wordIndex = (wordIndex - 1 + shuffledWords.length) % shuffledWords.length; showWord(); }
+
+// ========== VERIFY MODE ==========
+const verifyStatus = {}; // sym -> 'ok' | 'fail' | undefined
+
+function buildVerifyList() {
+  const list = document.getElementById('verify-list');
+  list.innerHTML = '';
+
+  SYMBOLS.forEach((s, i) => {
+    const row = document.createElement('div');
+    row.className = 'verify-row' + (verifyStatus[s.sym] === 'ok' ? ' status-ok' : verifyStatus[s.sym] === 'fail' ? ' status-fail' : '');
+    row.id = `vr-${i}`;
+
+    const audioFile = s.audio || '(TTS diphthong)';
+
+    row.innerHTML = `
+      <div class="vr-symbol">${s.sym}</div>
+      <div class="vr-info">
+        <div class="vr-name">${s.name}</div>
+        <div class="vr-file">${audioFile}</div>
+      </div>
+      <button class="vr-play" onclick="speakSound('${s.sym.replace(/'/g, "\\'")}')">&#9654;</button>
+      <div class="vr-actions">
+        <button class="vr-ok ${verifyStatus[s.sym] === 'ok' ? 'active' : ''}" onclick="markVerify(${i}, 'ok')">&#10003;</button>
+        <button class="vr-fail ${verifyStatus[s.sym] === 'fail' ? 'active' : ''}" onclick="markVerify(${i}, 'fail')">&#10007;</button>
+      </div>
+    `;
+    list.appendChild(row);
+  });
+
+  updateVerifySummary();
+}
+
+function markVerify(index, status) {
+  const s = SYMBOLS[index];
+  verifyStatus[s.sym] = status;
+  const row = document.getElementById(`vr-${index}`);
+  row.className = 'verify-row' + (status === 'ok' ? ' status-ok' : ' status-fail');
+  row.querySelector('.vr-ok').classList.toggle('active', status === 'ok');
+  row.querySelector('.vr-fail').classList.toggle('active', status === 'fail');
+  updateVerifySummary();
+}
+
+function updateVerifySummary() {
+  const total = SYMBOLS.length;
+  const ok = Object.values(verifyStatus).filter(v => v === 'ok').length;
+  const fail = Object.values(verifyStatus).filter(v => v === 'fail').length;
+  const pending = total - ok - fail;
+  document.getElementById('verify-summary').innerHTML = `
+    <span class="verify-stat ok">&#10003; ${ok} correct</span>
+    <span class="verify-stat fail">&#10007; ${fail} wrong</span>
+    <span class="verify-stat pending">${pending} untested</span>
+  `;
+}
+
+// ========== MODE SWITCHING ==========
+function switchMode(mode) {
+  document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('symbol-mode').classList.add('hidden');
+  document.getElementById('word-mode').classList.add('hidden');
+  document.getElementById('verify-mode').classList.add('hidden');
+
+  const tabs = document.querySelectorAll('.mode-tab');
+  if (mode === 'symbols') { tabs[0].classList.add('active'); document.getElementById('symbol-mode').classList.remove('hidden'); }
+  else if (mode === 'words') { tabs[1].classList.add('active'); document.getElementById('word-mode').classList.remove('hidden'); showWord(); }
+  else if (mode === 'verify') { tabs[2].classList.add('active'); document.getElementById('verify-mode').classList.remove('hidden'); buildVerifyList(); }
+}
+
+// ========== KEYBOARD SHORTCUTS ==========
+document.addEventListener('keydown', (e) => {
+  const symHidden = document.getElementById('symbol-mode').classList.contains('hidden');
+  const wordHidden = document.getElementById('word-mode').classList.contains('hidden');
+  if (!symHidden) {
+    if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); nextSymbol(); }
+    if (e.key === 'ArrowLeft') { prevSymbol(); }
+    if (e.key === 'Enter') { playCurrentSymbol(); }
+  } else if (!wordHidden) {
+    if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); nextWord(); }
+    if (e.key === 'ArrowLeft') { prevWord(); }
+    if (e.key === 'Enter') { revealWord(); }
+  }
+});
+
+// ========== SWIPE ==========
+let touchStartX = 0;
+document.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; });
+document.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].screenX - touchStartX;
+  if (Math.abs(dx) < 50) return;
+  const inSym = !document.getElementById('symbol-mode').classList.contains('hidden');
+  const inWord = !document.getElementById('word-mode').classList.contains('hidden');
+  if (inSym) { dx < 0 ? nextSymbol() : prevSymbol(); }
+  else if (inWord) { dx < 0 ? nextWord() : prevWord(); }
+});
+
+// ========== INIT ==========
+filteredSymbols = shuffle([...SYMBOLS]);
+showSymbol();
+</script>
+</body>
+</html>
