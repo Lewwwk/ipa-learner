@@ -105,6 +105,11 @@
   .ipa-unit .sound-hint { font-size: 0.7rem; color: #5555aa; margin-bottom: 4px; min-height: 1em; white-space: nowrap; }
   .ipa-unit .ipa-char { font-size: 2.8rem; font-family: 'Doulos SIL', 'Noto Sans', 'DejaVu Sans', serif; color: #ccccff; line-height: 1.2; }
   .ipa-unit .sound-icon { font-size: 0.65rem; color: #4444aa; margin-top: 4px; }
+  .ipa-unit.diacritic { padding: 8px 2px; cursor: default; }
+  .ipa-unit.diacritic:hover { background: transparent; }
+  .ipa-unit.diacritic .ipa-char { font-size: 1.8rem; color: #6666aa; }
+  .ipa-unit.diacritic .sound-hint { color: #444466; }
+  .ipa-unit.diacritic .sound-icon { display: none; }
 
   .word-prompt { font-size: 0.9rem; color: #7777aa; margin-bottom: 20px; }
 
@@ -216,6 +221,7 @@
       <button class="filter-btn active" data-filter="all" onclick="setFilter('all')">All</button>
       <button class="filter-btn" data-filter="vowels" onclick="setFilter('vowels')">Vowels</button>
       <button class="filter-btn" data-filter="consonants" onclick="setFilter('consonants')">Consonants</button>
+      <button class="filter-btn" data-filter="diacritics" onclick="setFilter('diacritics')">Marks</button>
     </div>
     <div class="card">
       <div class="symbol-display" id="sym-display"></div>
@@ -329,6 +335,11 @@ const SYMBOLS = [
 
   // --- Other ---
   { sym: 'ʔ',  name: 'glottal stop',    cat: 'consonants', audio: 'consonants/Glottal_stop.mp3',    ex: 'uh-**oh**', hint: '(stop)' },
+
+  // --- Diacritics / Suprasegmentals ---
+  { sym: 'ː',  name: 'length mark',        cat: 'diacritics', audio: null, ex: '/iː/ = long "ee"', hint: '(longer)' },
+  { sym: 'ˈ',  name: 'primary stress',     cat: 'diacritics', audio: null, ex: '/ˈwɔːtəɹ/ = **WA**-ter', hint: '(stress)' },
+  { sym: 'ˌ',  name: 'secondary stress',   cat: 'diacritics', audio: null, ex: '/ˌɪntəˈnæʃənəl/', hint: '(lighter stress)' },
 ];
 
 // Build lookup: symbol -> SYMBOLS entry
@@ -338,6 +349,7 @@ SYMBOLS.forEach(s => { SYM_MAP[s.sym] = s; });
 // ========== WORD DATA ==========
 // General American English transcriptions.
 const WORDS = [
+  // --- Simple one-syllable words ---
   { word: 'cat',    ipa: [['k','k'], ['æ','a'], ['t','t']] },
   { word: 'dog',    ipa: [['d','d'], ['ɑ','ah'], ['ɡ','g']] },
   { word: 'fish',   ipa: [['f','f'], ['ɪ','ih'], ['ʃ','sh']] },
@@ -345,10 +357,10 @@ const WORDS = [
   { word: 'think',  ipa: [['θ','th'], ['ɪ','ih'], ['ŋ','ng'], ['k','k']] },
   { word: 'this',   ipa: [['ð','th'], ['ɪ','ih'], ['z','z']] },
   { word: 'house',  ipa: [['h','h'], ['aʊ','ow'], ['s','s']] },
-  { word: 'moon',   ipa: [['m','m'], ['u','oo'], ['n','n']] },
+  { word: 'moon',   ipa: [['m','m'], ['uː','oo+'], ['n','n']] },
   { word: 'sun',    ipa: [['s','s'], ['ʌ','uh'], ['n','n']] },
-  { word: 'tree',   ipa: [['t','t'], ['ɹ','r'], ['i','ee']] },
-  { word: 'bird',   ipa: [['b','b'], ['ɜ','er'], ['ɹ','r'], ['d','d']] },
+  { word: 'tree',   ipa: [['t','t'], ['ɹ','r'], ['iː','ee+']] },
+  { word: 'bird',   ipa: [['b','b'], ['ɜː','er+'], ['ɹ','r'], ['d','d']] },
   { word: 'sing',   ipa: [['s','s'], ['ɪ','ih'], ['ŋ','ng']] },
   { word: 'shop',   ipa: [['ʃ','sh'], ['ɑ','ah'], ['p','p']] },
   { word: 'jump',   ipa: [['dʒ','j'], ['ʌ','uh'], ['m','m'], ['p','p']] },
@@ -364,20 +376,10 @@ const WORDS = [
   { word: 'time',   ipa: [['t','t'], ['aɪ','eye'], ['m','m']] },
   { word: 'big',    ipa: [['b','b'], ['ɪ','ih'], ['ɡ','g']] },
   { word: 'red',    ipa: [['ɹ','r'], ['ɛ','eh'], ['d','d']] },
-  { word: 'green',  ipa: [['ɡ','g'], ['ɹ','r'], ['i','ee'], ['n','n']] },
-  { word: 'blue',   ipa: [['b','b'], ['l','l'], ['u','oo']] },
-  { word: 'food',   ipa: [['f','f'], ['u','oo'], ['d','d']] },
+  { word: 'green',  ipa: [['ɡ','g'], ['ɹ','r'], ['iː','ee+'], ['n','n']] },
+  { word: 'blue',   ipa: [['b','b'], ['l','l'], ['uː','oo+']] },
+  { word: 'food',   ipa: [['f','f'], ['uː','oo+'], ['d','d']] },
   { word: 'book',   ipa: [['b','b'], ['ʊ','oo'], ['k','k']] },
-  { word: 'water',  ipa: [['w','w'], ['ɔ','aw'], ['t','t'], ['ə','uh'], ['ɹ','r']] },
-  { word: 'father', ipa: [['f','f'], ['ɑ','ah'], ['ð','th'], ['ə','uh'], ['ɹ','r']] },
-  { word: 'mother', ipa: [['m','m'], ['ʌ','uh'], ['ð','th'], ['ə','uh'], ['ɹ','r']] },
-  { word: 'about',  ipa: [['ə','uh'], ['b','b'], ['aʊ','ow'], ['t','t']] },
-  { word: 'yes',    ipa: [['j','y'], ['ɛ','eh'], ['s','s']] },
-  { word: 'zoo',    ipa: [['z','z'], ['u','oo']] },
-  { word: 'vision', ipa: [['v','v'], ['ɪ','ih'], ['ʒ','zh'], ['ə','uh'], ['n','n']] },
-  { word: 'shoe',   ipa: [['ʃ','sh'], ['u','oo']] },
-  { word: 'cheese', ipa: [['tʃ','ch'], ['i','ee'], ['z','z']] },
-  { word: 'joy',    ipa: [['dʒ','j'], ['ɔɪ','oy']] },
   { word: 'hat',    ipa: [['h','h'], ['æ','a'], ['t','t']] },
   { word: 'wet',    ipa: [['w','w'], ['ɛ','eh'], ['t','t']] },
   { word: 'let',    ipa: [['l','l'], ['ɛ','eh'], ['t','t']] },
@@ -388,6 +390,63 @@ const WORDS = [
   { word: 'cake',   ipa: [['k','k'], ['eɪ','ay'], ['k','k']] },
   { word: 'five',   ipa: [['f','f'], ['aɪ','eye'], ['v','v']] },
   { word: 'noise',  ipa: [['n','n'], ['ɔɪ','oy'], ['z','z']] },
+  { word: 'yes',    ipa: [['j','y'], ['ɛ','eh'], ['s','s']] },
+  { word: 'zoo',    ipa: [['z','z'], ['uː','oo+']] },
+  { word: 'shoe',   ipa: [['ʃ','sh'], ['uː','oo+']] },
+  { word: 'cheese', ipa: [['tʃ','ch'], ['iː','ee+'], ['z','z']] },
+  { word: 'joy',    ipa: [['dʒ','j'], ['ɔɪ','oy']] },
+  { word: 'feet',   ipa: [['f','f'], ['iː','ee+'], ['t','t']] },
+  { word: 'seat',   ipa: [['s','s'], ['iː','ee+'], ['t','t']] },
+  { word: 'sit',    ipa: [['s','s'], ['ɪ','ih'], ['t','t']] },
+  { word: 'pool',   ipa: [['p','p'], ['uː','oo+'], ['l','l']] },
+  { word: 'pull',   ipa: [['p','p'], ['ʊ','oo'], ['l','l']] },
+  { word: 'bad',    ipa: [['b','b'], ['æ','a'], ['d','d']] },
+  { word: 'bed',    ipa: [['b','b'], ['ɛ','eh'], ['d','d']] },
+  { word: 'road',   ipa: [['ɹ','r'], ['oʊ','oh'], ['d','d']] },
+  { word: 'white',  ipa: [['w','w'], ['aɪ','eye'], ['t','t']] },
+  { word: 'voice',  ipa: [['v','v'], ['ɔɪ','oy'], ['s','s']] },
+  { word: 'south',  ipa: [['s','s'], ['aʊ','ow'], ['θ','th']] },
+  { word: 'teeth',  ipa: [['t','t'], ['iː','ee+'], ['θ','th']] },
+  { word: 'breathe',ipa: [['b','b'], ['ɹ','r'], ['iː','ee+'], ['ð','th']] },
+  { word: 'wash',   ipa: [['w','w'], ['ɑ','ah'], ['ʃ','sh']] },
+  { word: 'rich',   ipa: [['ɹ','r'], ['ɪ','ih'], ['tʃ','ch']] },
+  { word: 'judge',  ipa: [['dʒ','j'], ['ʌ','uh'], ['dʒ','j']] },
+  { word: 'wrong',  ipa: [['ɹ','r'], ['ɑ','ah'], ['ŋ','ng']] },
+  { word: 'knew',   ipa: [['n','n'], ['uː','oo+']] },
+  { word: 'light',  ipa: [['l','l'], ['aɪ','eye'], ['t','t']] },
+  { word: 'girl',   ipa: [['ɡ','g'], ['ɜː','er+'], ['ɹ','r'], ['l','l']] },
+  { word: 'word',   ipa: [['w','w'], ['ɜː','er+'], ['ɹ','r'], ['d','d']] },
+  { word: 'saw',    ipa: [['s','s'], ['ɔː','aw+']] },
+  { word: 'law',    ipa: [['l','l'], ['ɔː','aw+']] },
+  { word: 'car',    ipa: [['k','k'], ['ɑː','ah+'], ['ɹ','r']] },
+  { word: 'heart',  ipa: [['h','h'], ['ɑː','ah+'], ['ɹ','r'], ['t','t']] },
+
+  // --- Multi-syllable words (with ˈ stress marks) ---
+  { word: 'water',  ipa: [['ˈ',''], ['w','w'], ['ɔː','aw+'], ['t','t'], ['ə','uh'], ['ɹ','r']] },
+  { word: 'father', ipa: [['ˈ',''], ['f','f'], ['ɑː','ah+'], ['ð','th'], ['ə','uh'], ['ɹ','r']] },
+  { word: 'mother', ipa: [['ˈ',''], ['m','m'], ['ʌ','uh'], ['ð','th'], ['ə','uh'], ['ɹ','r']] },
+  { word: 'about',  ipa: [['ə','uh'], ['ˈ',''], ['b','b'], ['aʊ','ow'], ['t','t']] },
+  { word: 'vision', ipa: [['ˈ',''], ['v','v'], ['ɪ','ih'], ['ʒ','zh'], ['ə','uh'], ['n','n']] },
+  { word: 'teacher',ipa: [['ˈ',''], ['t','t'], ['iː','ee+'], ['tʃ','ch'], ['ə','uh'], ['ɹ','r']] },
+  { word: 'kitchen',ipa: [['ˈ',''], ['k','k'], ['ɪ','ih'], ['tʃ','ch'], ['ə','uh'], ['n','n']] },
+  { word: 'children',ipa:[['ˈ',''], ['tʃ','ch'], ['ɪ','ih'], ['l','l'], ['d','d'], ['ɹ','r'], ['ə','uh'], ['n','n']] },
+  { word: 'music',  ipa: [['ˈ',''], ['m','m'], ['j','y'], ['uː','oo+'], ['z','z'], ['ɪ','ih'], ['k','k']] },
+  { word: 'woman',  ipa: [['ˈ',''], ['w','w'], ['ʊ','oo'], ['m','m'], ['ə','uh'], ['n','n']] },
+  { word: 'open',   ipa: [['ˈ',''], ['oʊ','oh'], ['p','p'], ['ə','uh'], ['n','n']] },
+  { word: 'people', ipa: [['ˈ',''], ['p','p'], ['iː','ee+'], ['p','p'], ['ə','uh'], ['l','l']] },
+  { word: 'happen', ipa: [['ˈ',''], ['h','h'], ['æ','a'], ['p','p'], ['ə','uh'], ['n','n']] },
+  { word: 'finger', ipa: [['ˈ',''], ['f','f'], ['ɪ','ih'], ['ŋ','ng'], ['ɡ','g'], ['ə','uh'], ['ɹ','r']] },
+  { word: 'yellow', ipa: [['ˈ',''], ['j','y'], ['ɛ','eh'], ['l','l'], ['oʊ','oh']] },
+  { word: 'orange', ipa: [['ˈ',''], ['ɑ','ah'], ['ɹ','r'], ['ə','uh'], ['n','n'], ['dʒ','j']] },
+  { word: 'purple', ipa: [['ˈ',''], ['p','p'], ['ɜː','er+'], ['ɹ','r'], ['p','p'], ['ə','uh'], ['l','l']] },
+  { word: 'today',  ipa: [['t','t'], ['ə','uh'], ['ˈ',''], ['d','d'], ['eɪ','ay']] },
+  { word: 'begin',  ipa: [['b','b'], ['ɪ','ih'], ['ˈ',''], ['ɡ','g'], ['ɪ','ih'], ['n','n']] },
+  { word: 'guitar', ipa: [['ɡ','g'], ['ɪ','ih'], ['ˈ',''], ['t','t'], ['ɑː','ah+'], ['ɹ','r']] },
+  { word: 'balloon',ipa: [['b','b'], ['ə','uh'], ['ˈ',''], ['l','l'], ['uː','oo+'], ['n','n']] },
+  { word: 'machine',ipa: [['m','m'], ['ə','uh'], ['ˈ',''], ['ʃ','sh'], ['iː','ee+'], ['n','n']] },
+  { word: 'banana', ipa: [['b','b'], ['ə','uh'], ['ˈ',''], ['n','n'], ['æ','a'], ['n','n'], ['ə','uh']] },
+  { word: 'elephant',ipa:[['ˈ',''], ['ɛ','eh'], ['l','l'], ['ə','uh'], ['f','f'], ['ə','uh'], ['n','n'], ['t','t']] },
+  { word: 'beautiful',ipa:[['ˈ',''], ['b','b'], ['j','y'], ['uː','oo+'], ['t','t'], ['ə','uh'], ['f','f'], ['ə','uh'], ['l','l']] },
 ];
 
 // ========== AUDIO ENGINE ==========
@@ -400,6 +459,9 @@ const DIPHTHONG_TTS = {
 };
 
 function speakSound(ipaSymbol) {
+  // Stress marks and length marks have no sound
+  if (ipaSymbol === 'ˈ' || ipaSymbol === 'ˌ' || ipaSymbol === 'ː') return;
+
   const entry = SYM_MAP[ipaSymbol];
 
   // If we have an audio file, play it
@@ -413,6 +475,15 @@ function speakSound(ipaSymbol) {
     audio.currentTime = 0;
     audio.play().catch(() => ttsFallback(ipaSymbol));
     return;
+  }
+
+  // Long vowels (e.g., iː, uː, ɜː): play the base vowel sound
+  if (ipaSymbol.endsWith('ː')) {
+    const base = ipaSymbol.slice(0, -1);
+    if (SYM_MAP[base] && SYM_MAP[base].audio) {
+      speakSound(base);
+      return;
+    }
   }
 
   // Diphthongs: use TTS with the diphthong word
@@ -505,9 +576,10 @@ function showWord() {
   container.innerHTML = '';
   entry.ipa.forEach(([sym, hint]) => {
     const unit = document.createElement('div');
-    unit.className = 'ipa-unit';
+    const isDiacritic = sym === 'ˈ' || sym === 'ˌ';
+    unit.className = 'ipa-unit' + (isDiacritic ? ' diacritic' : '');
     unit.innerHTML = `<div class="sound-hint">${hint}</div><div class="ipa-char">${sym}</div><div class="sound-icon">&#128264;</div>`;
-    unit.addEventListener('click', () => speakSound(sym));
+    if (!isDiacritic) unit.addEventListener('click', () => speakSound(sym));
     container.appendChild(unit);
   });
   document.getElementById('reveal-area').innerHTML = '<button class="reveal-btn" onclick="revealWord()">Reveal Word</button>';
