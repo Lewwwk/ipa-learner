@@ -346,6 +346,15 @@ const SYMBOLS = [
 const SYM_MAP = {};
 SYMBOLS.forEach(s => { SYM_MAP[s.sym] = s; });
 
+// Long vowels (vowel + ː) are used in word transcriptions.
+// Map each to its base vowel's audio so lookups are direct, no string parsing needed.
+['i','u','ɜ','ɔ','ɑ','e','o','æ','ɛ','ʌ','ə','ʊ'].forEach(v => {
+  const base = SYM_MAP[v];
+  if (base && base.audio) {
+    SYM_MAP[v + 'ː'] = { sym: v + 'ː', name: base.name + ' (long)', cat: base.cat, audio: base.audio, ex: base.ex, hint: base.hint + '+' };
+  }
+});
+
 // ========== WORD DATA ==========
 // General American English transcriptions.
 const WORDS = [
